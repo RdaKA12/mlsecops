@@ -22,6 +22,11 @@ def main() -> None:
         "0.0.0.0",
         "--port",
         port,
+        "--serve-artifacts",
+        "--allowed-hosts",
+        "*",
+        "--cors-allowed-origins",
+        "*",
     ]
     subprocess.call(cmd)
 
