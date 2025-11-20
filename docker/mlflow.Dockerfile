@@ -1,4 +1,4 @@
-﻿FROM python:3.11-slim
+FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
@@ -16,4 +16,4 @@ ENV MLFLOW_PORT=5000
 
 EXPOSE 5000
 
-CMD [\"python\", \"tracking_server.py\"]
+CMD ["python", "tracking_server.py"]

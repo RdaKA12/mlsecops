@@ -1,4 +1,4 @@
-﻿FROM python:3.11-slim
+FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
@@ -14,4 +14,4 @@ COPY . .
 
 ENV MLFLOW_TRACKING_URI=http://mlflow:5000
 
-CMD [\"sleep\", \"infinity\"]
+CMD ["sleep", "infinity"]

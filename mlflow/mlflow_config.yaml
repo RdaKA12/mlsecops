@@ -1,4 +1,4 @@
-﻿backend_store_uri: sqlite:///mlflow/mlflow.db
+backend_store_uri: sqlite:////mlflow/mlflow.db
 default_artifact_root: /mlflow_artifacts
 host: 0.0.0.0
 port: 5000
