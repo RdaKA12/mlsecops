@@ -1,0 +1,61 @@
+version: "3.9"
+
+services:
+  mlflow:
+    build:
+      context: .
+      dockerfile: docker/mlflow.Dockerfile
+    environment:
+      MLFLOW_BACKEND_STORE_URI: sqlite:///mlflow/mlflow.db
+      MLFLOW_ARTIFACT_ROOT: /mlflow_artifacts
+      MLFLOW_PORT: "5000"
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow-backend:/mlflow
+      - mlflow-artifacts:/mlflow_artifacts
+
+  trainer:
+    build:
+      context: .
+      dockerfile: docker/trainer.Dockerfile
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+    volumes:
+      - .:/app
+    depends_on:
+      - mlflow
+      - minio
+
+  minio:
+    image: minio/minio
+    environment:
+      MINIO_ACCESS_KEY: mlsecops
+      MINIO_SECRET_KEY: mlsecopssecret
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+
+  jenkins:
+    image: jenkins/jenkins:lts-jdk17
+    user: root
+    environment:
+      JAVA_OPTS: "-Djenkins.install.runSetupWizard=false"
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins-home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - mlflow
+      - minio
+
+volumes:
+  mlflow-backend: {}
+  mlflow-artifacts: {}
+  minio-data: {}
+  jenkins-home: {}
