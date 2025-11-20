@@ -107,12 +107,7 @@ pipeline {
           export PYTHONPATH=..
           dvc init --no-scm --force || true
           dvc repro
-          dvc add models/model.pkl models/metrics.json
-          dvc commit -f
-          dvc remote add -d minio s3://mlsecops || true
-          dvc remote modify minio endpointurl http://minio:9000 || true
-          dvc remote modify minio access_key_id mlsecops || true
-          dvc remote modify minio secret_access_key mlsecopssecret || true
+          # Outputs are already declared in dvc.yaml; just push tracked versions
           dvc push || true
         """
       }
