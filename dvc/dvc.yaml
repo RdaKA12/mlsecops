@@ -1,6 +1,6 @@
-﻿stages:
+stages:
   preprocess:
-    cmd: python ../src/preprocessing.py
+    cmd: PYTHONPATH=.. python ../src/preprocessing.py
     deps:
       - ../src/preprocessing.py
     outs:
@@ -8,7 +8,7 @@
       - data/test.csv
 
   train:
-    cmd: python ../src/train.py
+    cmd: PYTHONPATH=.. python ../src/train.py
     deps:
       - ../src/train.py
       - data/train.csv
@@ -16,7 +16,7 @@
       - models/model.pkl
 
   evaluate:
-    cmd: python ../src/evaluate.py
+    cmd: PYTHONPATH=.. python ../src/evaluate.py
     deps:
       - ../src/evaluate.py
       - data/test.csv
