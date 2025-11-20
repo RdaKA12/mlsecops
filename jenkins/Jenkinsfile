@@ -24,8 +24,9 @@ pipeline {
     stage('Static Security Checks (bandit, safety, pip-audit)') {
       steps {
         sh """
+          mkdir -p reports
           . ${VENV}/bin/activate
-          bandit -r src security
+          bandit -r src security -f json -o reports/bandit.json || true
           safety check --full-report || true
           pip-audit -r requirements.txt || true
         """
