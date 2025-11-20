@@ -1,107 +1,105 @@
-﻿pipeline {
+pipeline {
   agent any
 
   environment {
-    VENV = \".venv\"
+    VENV = '.venv'
   }
 
   stages {
     stage('Checkout SCM') {
-      steps {
-        checkout scm
-      }
+      steps { checkout scm }
     }
 
     stage('Setup Python') {
       steps {
-        sh '''
-          python3 -m venv 
-          . /bin/activate
+        sh """
+          python3 -m venv ${VENV}
+          . ${VENV}/bin/activate
           pip install --upgrade pip
           pip install -r requirements.txt
-        '''
+        """
       }
     }
 
     stage('Static Security Checks (bandit, safety, pip-audit)') {
       steps {
-        sh '''
-          . /bin/activate
+        sh """
+          . ${VENV}/bin/activate
           bandit -r src security
           safety check --full-report || true
           pip-audit -r requirements.txt || true
-        '''
+        """
       }
     }
 
     stage('Supply Chain Validation') {
       steps {
-        sh '''
-          . /bin/activate
+        sh """
+          . ${VENV}/bin/activate
           python -m security.supply_chain
-        '''
+        """
       }
     }
 
     stage('Train Model') {
       steps {
-        sh '''
-          . /bin/activate
+        sh """
+          . ${VENV}/bin/activate
           python -m src.preprocessing
           python -m src.train
-        '''
+        """
       }
     }
 
     stage('Evaluate Model') {
       steps {
-        sh '''
-          . /bin/activate
+        sh """
+          . ${VENV}/bin/activate
           python -m src.evaluate
-        '''
+        """
       }
     }
 
     stage('Adversarial Tests (FGSM, PGD)') {
       steps {
-        sh '''
-          . /bin/activate
+        sh """
+          . ${VENV}/bin/activate
           python -m src.adversarial_tests
-        '''
+        """
       }
     }
 
     stage('Poisoning Detection') {
       steps {
-        sh '''
-          . /bin/activate
+        sh """
+          . ${VENV}/bin/activate
           python -m src.poisoning_detection
-        '''
+        """
       }
     }
 
     stage('Drift Monitor') {
       steps {
-        sh '''
-          . /bin/activate
+        sh """
+          . ${VENV}/bin/activate
           python -m src.drift_monitor
-        '''
+        """
       }
     }
 
     stage('MLSecOps Audit') {
       steps {
-        sh '''
-          . /bin/activate
+        sh """
+          . ${VENV}/bin/activate
           python -m src.security_audit
-        '''
+        """
       }
     }
 
     stage('DVC Snapshot (add + commit + push)') {
       steps {
-        sh '''
-          . /bin/activate
+        sh """
+          . ${VENV}/bin/activate
           cd dvc
           dvc init --no-scm || true
           dvc repro
@@ -112,16 +110,16 @@
           dvc remote modify minio access_key_id mlsecops || true
           dvc remote modify minio secret_access_key mlsecopssecret || true
           dvc push || true
-        '''
+        """
       }
     }
 
     stage('Publish Model Card') {
       steps {
-        sh '''
-          . /bin/activate
+        sh """
+          . ${VENV}/bin/activate
           python -m src.model_card
-        '''
+        """
       }
     }
   }
