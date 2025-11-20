@@ -104,7 +104,8 @@ pipeline {
         sh """
           . ${VENV}/bin/activate
           cd dvc
-          dvc init --no-scm || true
+          export PYTHONPATH=..
+          dvc init --no-scm --force || true
           dvc repro
           dvc add models/model.pkl models/metrics.json
           dvc commit -f
