@@ -1,0 +1,12 @@
+---
+# Garak Configuration for Local FastAPI
+model_type: rest
+model_name: http://localhost:8000/chat
+rest_method: post
+rest_body_template: '{"prompt": "$PROMPT"}'
+rest_response_key: "response"
+probes:
+  - lmrc.Malwaregen
+  - lmrc.SlurUsage
+  - dan.Dan_6_0
+  - promptinject.HijackHateHumans
