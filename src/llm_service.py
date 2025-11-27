@@ -12,11 +12,6 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader, ConsoleMetricExporter
 
-# LangChain
-from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_core.prompts import ChatPromptTemplate
-
 # LLM Guard
 from llm_guard.input_scanners import PromptInjection, Anonymize, Secrets
 from llm_guard.output_scanners import Deanonymize, NoRefusal, BanTopics
@@ -94,17 +89,11 @@ async def chat(request: ChatRequest):
         # 2. LLM Call
         with tracer.start_as_current_span("llm_generation"):
             try:
-                # Check for API Key
-                if os.getenv("OPENAI_API_KEY"):
-                    llm = ChatOpenAI(temperature=0.7)
-                    messages = [HumanMessage(content=sanitized_prompt)]
-                    ai_msg = llm.invoke(messages)
-                    response_text = ai_msg.content
+                # Dummy generation: keep everything local, no external calls
+                if "ignore previous" in sanitized_prompt.lower():
+                    response_text = "I cannot ignore previous instructions due to policy."
                 else:
-                    # Dummy Fallback for demo without keys
-                    response_text = f"Echo (No API Key): {sanitized_prompt}"
-                    if "ignore previous" in sanitized_prompt.lower():
-                        response_text = "I cannot ignore instructions."
+                    response_text = f"Echo: {sanitized_prompt}"
             except Exception as e:
                 REQUEST_COUNT.labels(status="error").inc()
                 raise HTTPException(status_code=500, detail=str(e))
