@@ -13,10 +13,6 @@ from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader, ConsoleMetricExporter
 
 # LLM Guard
-from llm_guard.input_scanners import PromptInjection, Anonymize, Secrets
-from llm_guard.output_scanners import Deanonymize, NoRefusal, BanTopics
-from llm_guard.vault import Vault
-
 # Setup OpenTelemetry
 trace.set_tracer_provider(TracerProvider())
 tracer = trace.get_tracer(__name__)
@@ -28,19 +24,6 @@ app = FastAPI(title="MLSecOps LLM Service")
 # Prometheus Metrics
 REQUEST_COUNT = Counter("llm_request_total", "Total LLM requests", ["status"])
 REQUEST_LATENCY = Histogram("llm_request_latency_seconds", "LLM request latency")
-GUARDRAIL_TRIGGERED = Counter("llm_guardrail_triggered_total", "Guardrails triggered", ["type", "scanner"])
-
-# Initialize Guardrails
-vault = Vault()
-input_scanners = [
-    PromptInjection(),
-    Anonymize(vault=vault),
-    Secrets(redact_mode="replace"),
-]
-output_scanners = [
-    Deanonymize(vault=vault),
-    NoRefusal(),
-]
 
 class ChatRequest(BaseModel):
     prompt: str
@@ -66,25 +49,8 @@ async def chat(request: ChatRequest):
     prompt_text = request.prompt
     
     with tracer.start_as_current_span("llm_request"):
-        # 1. Input Guardrails
-        with tracer.start_as_current_span("input_guardrails"):
-            sanitized_prompt = prompt_text
-            all_valid = True
-            for scanner in input_scanners:
-                sanitized_prompt, valid, score = scanner.scan(sanitized_prompt)
-                if not valid:
-                    GUARDRAIL_TRIGGERED.labels(type="input", scanner=scanner.__class__.__name__).inc()
-                    all_valid = False
-                    # We can choose to block or continue with sanitized
-                    # For strict security, we might block:
-                    # raise HTTPException(status_code=400, detail=f"Input rejected by {scanner.__class__.__name__}")
-            
-            # If Anonymize ran, sanitized_prompt might be different
-        
-        if not all_valid:
-             # Option: Reject request
-             # return ChatResponse(response="I cannot answer that due to security policies.", is_sanitized=True)
-             pass # For demo, we proceed with sanitized prompt
+        # 1. (Optional) Input handling – no external guardrails to keep deps minimal
+        sanitized_prompt = prompt_text
 
         # 2. LLM Call
         with tracer.start_as_current_span("llm_generation"):
@@ -98,14 +64,7 @@ async def chat(request: ChatRequest):
                 REQUEST_COUNT.labels(status="error").inc()
                 raise HTTPException(status_code=500, detail=str(e))
 
-        # 3. Output Guardrails
-        with tracer.start_as_current_span("output_guardrails"):
-            sanitized_response = response_text
-            for scanner in output_scanners:
-                sanitized_response, valid, score = scanner.scan(sanitized_prompt, sanitized_response)
-                if not valid:
-                    GUARDRAIL_TRIGGERED.labels(type="output", scanner=scanner.__class__.__name__).inc()
-                    sanitized_response = "Response withheld due to security policy."
+        sanitized_response = response_text
 
         REQUEST_COUNT.labels(status="success").inc()
         REQUEST_LATENCY.observe(time.time() - start_time)
