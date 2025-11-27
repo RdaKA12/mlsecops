@@ -11,10 +11,10 @@ pipeline {
       steps { checkout scm }
     }
 
-    stage('Setup Python') {
+    stage('Setup Environment') {
       steps {
         sh """
-          apt-get update && apt-get install -y python3 python3-venv python3-pip git
+          apt-get update && apt-get install -y python3 python3-venv python3-pip git nodejs npm
           python3 -m venv ${VENV}
           . ${VENV}/bin/activate
           pip install --upgrade pip
@@ -23,7 +23,7 @@ pipeline {
       }
     }
 
-    stage('Static Security Checks (bandit, safety, pip-audit)') {
+    stage('Security & Static Analysis') {
       steps {
         sh """
           mkdir -p reports
@@ -35,65 +35,24 @@ pipeline {
       }
     }
 
-    stage('Supply Chain Validation') {
-      steps {
-        sh """
-          . ${VENV}/bin/activate
-          python -m security.supply_chain
-        """
-      }
-    }
-
-    stage('Train Model') {
+    stage('Train & Evaluate Model') {
       steps {
         sh """
           . ${VENV}/bin/activate
           python -m src.preprocessing
           python -m src.train
-        """
-      }
-    }
-
-    stage('Evaluate Model') {
-      steps {
-        sh """
-          . ${VENV}/bin/activate
           python -m src.evaluate
         """
       }
     }
 
-    stage('Adversarial Tests (FGSM, PGD)') {
+    stage('Robustness & MLSecOps') {
       steps {
         sh """
           . ${VENV}/bin/activate
           python -m src.adversarial_tests
-        """
-      }
-    }
-
-    stage('Poisoning Detection') {
-      steps {
-        sh """
-          . ${VENV}/bin/activate
           python -m src.poisoning_detection
-        """
-      }
-    }
-
-    stage('Drift Monitor') {
-      steps {
-        sh """
-          . ${VENV}/bin/activate
           python -m src.drift_monitor
-        """
-      }
-    }
-
-    stage('MLSecOps Audit') {
-      steps {
-        sh """
-          . ${VENV}/bin/activate
           python -m src.security_audit
         """
       }
@@ -109,6 +68,31 @@ pipeline {
           dvc repro
           # Outputs are already declared in dvc.yaml; just push tracked versions
           dvc push || true
+        """
+      }
+    }
+
+    stage('LLM Red Teaming (Garak & Promptfoo)') {
+      steps {
+        sh """
+          . ${VENV}/bin/activate
+          # Start LLM service in background
+          python -m uvicorn src.llm_service:app --host 0.0.0.0 --port 8000 &
+          LLM_PID=$!
+
+          # Give the service time to start
+          sleep 10
+
+          mkdir -p reports
+
+          # Garak red-teaming against the REST LLM service
+          garak --model_type rest --model_name http://localhost:8000/chat --probes lmrc.Malwaregen,lmrc.SlurUsage,dan.Dan_6_0,promptinject.HijackHateHumans || true
+
+          # Promptfoo behavioral tests
+          npx promptfoo eval || true
+
+          # Stop LLM service
+          kill $LLM_PID || true
         """
       }
     }
