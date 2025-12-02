@@ -14,7 +14,7 @@ pipeline {
     stage('Setup Environment') {
       steps {
         sh '''
-          apt-get update && apt-get install -y python3 python3-venv python3-pip git nodejs npm
+          apt-get update && apt-get install -y python3 python3-venv python3-pip git nodejs npm curl
           python3 -m venv $VENV
           . $VENV/bin/activate
           pip install --upgrade pip
@@ -75,21 +75,35 @@ pipeline {
     stage('LLM Red Teaming (Garak & Promptfoo)') {
       steps {
         sh '''
+          PORT=8000
           . $VENV/bin/activate
+
+          # Clean up any previous uvicorn on the port
+          pkill -f "uvicorn src.llm_service:app" || true
+
           # Start LLM service in background
-          python -m uvicorn src.llm_service:app --host 0.0.0.0 --port 8000 &
+          python -m uvicorn src.llm_service:app --host 0.0.0.0 --port $PORT > llm_service.log 2>&1 &
           LLM_PID=$!
 
-          # Give the service time to start
-          sleep 10
+          # Wait for service readiness
+          READY=
+          for i in $(seq 1 10); do
+            curl -sSf "http://localhost:$PORT/docs" >/dev/null 2>&1 && READY=1 && break
+            sleep 2
+          done
+          if [ "$READY" != "1" ]; then
+            echo "LLM service failed to start on port $PORT"; kill $LLM_PID || true; exit 1
+          fi
 
           mkdir -p reports
 
           # Garak red-teaming against the REST LLM service
-          garak --target_type rest --target_name http://localhost:8000/chat --probes malwaregen.TopLevel,lmrc.SlurUsage,dan.Dan_6_0,promptinject.HijackHateHumans --generations 5 || true
+          garak --target_type rest --target_name http://localhost:$PORT/chat \
+            --probes malwaregen.TopLevel,lmrc.SlurUsage,dan.Dan_6_0,promptinject.HijackHateHumans \
+            --generations 5 || true
 
           # Promptfoo behavioral tests
-          npx promptfoo eval || true
+          npx promptfoo@latest eval -c promptfoo.yaml || true
 
           # Stop LLM service
           kill $LLM_PID || true
