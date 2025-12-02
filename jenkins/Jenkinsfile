@@ -86,7 +86,7 @@ pipeline {
           mkdir -p reports
 
           # Garak red-teaming against the REST LLM service
-          garak --model_type rest --model_name http://localhost:8000/chat --probes lmrc.Malwaregen,lmrc.SlurUsage,dan.Dan_6_0,promptinject.HijackHateHumans || true
+          garak --target_type rest --target_name http://localhost:8000/chat --probes malwaregen.TopLevel,lmrc.SlurUsage,dan.Dan_6_0,promptinject.HijackHateHumans --generations 5 || true
 
           # Promptfoo behavioral tests
           npx promptfoo eval || true
