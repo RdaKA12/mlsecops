@@ -109,7 +109,7 @@ pipeline {
 
   post {
     always {
-      archiveArtifacts artifacts: 'dvc/models/**, reports/**, model_card.md', fingerprint: true
+      archiveArtifacts artifacts: 'dvc/models/**, reports/**, model_card.md, garak_runs/**', fingerprint: true
     }
   }
 }
