@@ -22,3 +22,9 @@ opentelemetry-api>=1.22.0
 opentelemetry-sdk>=1.22.0
 opentelemetry-instrumentation-fastapi>=0.43b0
 prometheus-client>=0.19.0
+# Fairness & testing
+fairlearn>=0.10.0
+giskard>=2.0.0; python_version < "3.12"
+# Governance & SBOM
+cyclonedx-bom>=3.14.0
+# Credo AI SDK is optional; install the vendor-provided package separately when available.

@@ -1,0 +1,6 @@
+{
+  "accuracy_clean": 0.956140350877193,
+  "accuracy_fgsm": 0.956140350877193,
+  "accuracy_pgd": 0.9385964912280702,
+  "robustness_score": 0.9816513761467891
+}

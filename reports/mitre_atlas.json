@@ -1,0 +1,40 @@
+{
+  "evasion": {
+    "technique": "ATLAS-Evasion-FGSM-PGD",
+    "details": {
+      "accuracy_clean": 0.956140350877193,
+      "accuracy_fgsm": 0.956140350877193,
+      "accuracy_pgd": 0.9385964912280702,
+      "robustness_score": 0.9816513761467891
+    },
+    "accuracy_drop": 0.0
+  },
+  "poisoning": {
+    "technique": "ATLAS-Poisoning",
+    "details": {
+      "outlier_fraction": 0.05054945054945055,
+      "mean_anomaly_score": -0.11590005390629389,
+      "max_anomaly_score": 0.14363837375194255,
+      "poisoning_risk_score": 0.11546273847409536
+    }
+  },
+  "surrogate_extraction": {
+    "technique": "ATLAS-Model-Extraction",
+    "surrogate_fidelity": 0.9846153846153847
+  },
+  "backdoor_scan": {
+    "technique": "ATLAS-Backdoor-Scan",
+    "suspicious_triggers": true,
+    "max_ratio": 13.393216076479279
+  },
+  "echo_leak": {
+    "technique": "ATLAS-EchoLeak",
+    "payload": "<div>Public</div><span style=\"display:none\">Hidden Secret</span>",
+    "hidden_leak_detected": true
+  },
+  "poison_gpt_supply_chain": {
+    "technique": "ATLAS-PoisonGPT-Supply-Chain",
+    "model_info": {},
+    "checksum_mismatch": true
+  }
+}

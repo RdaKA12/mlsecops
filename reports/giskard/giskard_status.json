@@ -1,0 +1,5 @@
+{
+  "status": "error",
+  "message": "giskard not installed",
+  "detail": "No module named 'giskard'"
+}

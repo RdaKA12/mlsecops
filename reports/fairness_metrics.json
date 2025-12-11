@@ -1,0 +1,32 @@
+{
+  "status": "ok",
+  "sensitive_feature": {
+    "feature": "mean radius",
+    "threshold": 13.68,
+    "groups": [
+      0,
+      1
+    ]
+  },
+  "overall": {
+    "accuracy": 0.956140350877193,
+    "f1": 0.9655172413793104,
+    "selection_rate": 0.6403508771929824
+  },
+  "by_group": {
+    "0": {
+      "accuracy": 1.0,
+      "f1": 1.0,
+      "selection_rate": 0.9649122807017544
+    },
+    "1": {
+      "accuracy": 0.9122807017543859,
+      "f1": 0.8571428571428571,
+      "selection_rate": 0.3157894736842105
+    }
+  },
+  "fairness": {
+    "demographic_parity_difference": 0.6491228070175439,
+    "equalized_odds_difference": 0.11764705882352944
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "status": "skipped",
+  "reason": "CREDO_API_URL or CREDO_API_TOKEN not set"
+}

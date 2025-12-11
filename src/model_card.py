@@ -14,9 +14,13 @@ def main() -> None:
     adversarial = read_or_empty(REPORTS_DIR / "adversarial_metrics.json")
     poisoning = read_or_empty(REPORTS_DIR / "poisoning_risk.json")
     drift = read_or_empty(REPORTS_DIR / "drift_metrics.json")
+    fairness = read_or_empty(REPORTS_DIR / "fairness_metrics.json")
+    giskard = read_or_empty(REPORTS_DIR / "giskard" / "giskard_status.json")
     supply = read_or_empty(REPORTS_DIR / "supply_chain.json")
     signing = read_or_empty(REPORTS_DIR / "model_signing.json")
     sbom = read_or_empty(REPORTS_DIR / "sbom.json")
+    sbom_cdx = read_or_empty(REPORTS_DIR / "sbom_cyclonedx.json")
+    credo_status = read_or_empty(REPORTS_DIR / "credo_status.json")
 
     now = datetime.utcnow().isoformat() + "Z"
 
@@ -73,16 +77,26 @@ Higher poisoning risk score suggests potential anomalous training samples.
 
 PSI > 0.2 or JS > 0.1 indicates significant drift.
 
+## 8. Fairness (Fairlearn)
+
+- Sensitive feature: {fairness.get('sensitive_feature', 'N/A')}
+- Demographic parity diff: {fairness.get('fairness', {}).get('demographic_parity_difference', 'N/A')}
+- Equalized odds diff: {fairness.get('fairness', {}).get('equalized_odds_difference', 'N/A')}
+- Group metrics: {fairness.get('by_group', 'N/A')}
+
+Lower absolute parity/odds differences indicate better group fairness.
+
 ## 7. Supply Chain and SBOM (OWASP ML06-07, MITRE PoisonGPT)
 
 - Banned packages OK: {supply.get('banned_packages_ok', 'N/A')}
 - File hashes: {supply.get('file_hashes_sha256', {})}
 - SBOM model hash: {sbom.get('model', {}).get('sha256', 'N/A')}
 - SBOM HF model checksum: {sbom.get('hf_model', {}).get('checksum_sha256', 'N/A')}
+- CycloneDX SBOM: {sbom_cdx.get('status', 'N/A')}
 
 Review SBOM for dependency integrity and potential supply chain risks.
 
-## 8. Model Signing (OWASP ML10)
+## 9. Model Signing (OWASP ML10)
 
 - Model path: {signing.get('model_path', 'N/A')}
 - SHA256 hash: {signing.get('hash_sha256', 'N/A')}
@@ -92,7 +106,22 @@ Review SBOM for dependency integrity and potential supply chain risks.
 
 Signed models provide integrity and provenance guarantees.
 
-## 9. Ethical Limitations
+## 10. Giskard Quality Scan
+
+- Status: {giskard.get('status', 'N/A')}
+- Issues found: {giskard.get('issues_found', 'N/A')}
+- Tests run: {giskard.get('tests_run', 'N/A')}
+- Artifacts: {giskard.get('artifacts', 'N/A')}
+
+Review Giskard findings for robustness, data quality, and bias issues.
+
+## 11. Governance (Credo AI)
+
+- Status: {credo_status.get('status', 'N/A')}
+- Detail: {credo_status.get('reason', credo_status.get('detail', 'N/A'))}
+- Payload: reports/credo_payload.json
+
+## 12. Ethical Limitations
 
 - Dataset represents a specific population and may not generalize globally.
 - Model is for educational and demonstration purposes and must not be used as a sole diagnostic tool.

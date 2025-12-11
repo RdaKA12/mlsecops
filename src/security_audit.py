@@ -1,5 +1,12 @@
 from src.utils import REPORTS_DIR, ensure_dir, save_json
-from security import owasp_ml_top10, owasp_llm_top10, mitre_atlas, supply_chain, sbom
+from security import (
+    owasp_ml_top10,
+    owasp_llm_top10,
+    mitre_atlas,
+    supply_chain,
+    sbom,
+    cyclonedx_generator,
+)
 
 
 def run_audit() -> dict:
@@ -9,6 +16,7 @@ def run_audit() -> dict:
     results["mitre_atlas"] = mitre_atlas.run()
     results["supply_chain"] = supply_chain.validate_supply_chain()
     results["sbom"] = sbom.build_sbom()
+    results["sbom_cyclonedx"] = cyclonedx_generator.generate_cyclonedx()
     path = REPORTS_DIR / "security_audit.json"
     ensure_dir(path.parent)
     save_json(path, results)

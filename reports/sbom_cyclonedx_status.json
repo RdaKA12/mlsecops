@@ -1,0 +1,5 @@
+{
+  "status": "ok",
+  "generator": "cyclonedx",
+  "output": "D:\\Projects\\mlsecops-project\\reports\\sbom_cyclonedx.json"
+}

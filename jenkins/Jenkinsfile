@@ -46,6 +46,24 @@ pipeline {
       }
     }
 
+    stage('Fairness (Fairlearn)') {
+      steps {
+        sh '''
+          . $VENV/bin/activate
+          python -m src.fairness_evaluation || true
+        '''
+      }
+    }
+
+    stage('Giskard Testing') {
+      steps {
+        sh '''
+          . $VENV/bin/activate
+          python -m src.giskard_tests || true
+        '''
+      }
+    }
+
     stage('Robustness & MLSecOps') {
       steps {
         sh '''
@@ -54,6 +72,15 @@ pipeline {
           python -m src.poisoning_detection
           python -m src.drift_monitor
           python -m src.security_audit
+        '''
+      }
+    }
+
+    stage('SBOM (CycloneDX)') {
+      steps {
+        sh '''
+          . $VENV/bin/activate
+          python -m security.cyclonedx_generator || true
         '''
       }
     }
@@ -111,6 +138,15 @@ pipeline {
       }
     }
 
+    stage('Governance (Credo AI)') {
+      steps {
+        sh '''
+          . $VENV/bin/activate
+          python -m security.credo_export || true
+        '''
+      }
+    }
+
     stage('Publish Model Card') {
       steps {
         sh '''
@@ -123,7 +159,7 @@ pipeline {
 
   post {
     always {
-      archiveArtifacts artifacts: 'dvc/models/**, reports/**, model_card.md, garak_runs/**', fingerprint: true
+      archiveArtifacts artifacts: 'dvc/models/**, reports/**, model_card.md, garak_runs/**, giskard_home/**', fingerprint: true
     }
   }
 }
